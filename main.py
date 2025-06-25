@@ -1,54 +1,47 @@
+import os
 import discord
 from discord import app_commands
 from discord.ext import commands
-import os
-from flask import Flask
-from threading import Thread
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot is alive!"
-
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
 
 intents = discord.Intents.default()
-intents.message_content = True
-intents.voice_states = True
 intents.guilds = True
+intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-tree = bot.tree
+
+# Your actual Discord server ID
+GUILD_ID = 1386044830290804938
+guild = discord.Object(id=GUILD_ID)
 
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
-    try:
-        synced = await tree.sync()
-        print(f"Synced {len(synced)} commands")
-    except Exception as e:
-        print(e)
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    await bot.tree.sync(guild=guild)
+    print("Slash commands synced.")
 
-@tree.command(name="lockvc", description="Lock a voice channel")
-@app_commands.describe(channel="Select the voice channel to lock")
-@commands.has_permissions(manage_channels=True)
+@bot.tree.command(name="lockvc", description="Lock a voice channel", guild=guild)
+@app_commands.describe(channel="The voice channel to lock")
 async def lockvc(interaction: discord.Interaction, channel: discord.VoiceChannel):
-    await channel.set_permissions(interaction.guild.default_role, connect=False)
-    await interaction.response.send_message(f"🔒 Locked **{channel.name}**", ephemeral=True)
+    overwrite = channel.overwrites_for(interaction.guild.default_role)
+    if overwrite.connect is False:
+        await interaction.response.send_message(f"🔒 The channel **{channel.name}** is already locked!", ephemeral=True)
+        return
 
-@tree.command(name="unlockvc", description="Unlock a voice channel")
-@app_commands.describe(channel="Select the voice channel to unlock")
-@commands.has_permissions(manage_channels=True)
+    overwrite.connect = False
+    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+    await interaction.response.send_message(f"🔒 Locked the voice channel **{channel.name}**!")
+
+@bot.tree.command(name="unlockvc", description="Unlock a voice channel", guild=guild)
+@app_commands.describe(channel="The voice channel to unlock")
 async def unlockvc(interaction: discord.Interaction, channel: discord.VoiceChannel):
-    await channel.set_permissions(interaction.guild.default_role, overwrite=None)
-    await interaction.response.send_message(f"🔓 Unlocked **{channel.name}**", ephemeral=True)
+    overwrite = channel.overwrites_for(interaction.guild.default_role)
+    if overwrite.connect is True or overwrite.connect is None:
+        await interaction.response.send_message(f"🔓 The channel **{channel.name}** is already unlocked!", ephemeral=True)
+        return
 
-keep_alive()
-TOKEN = os.getenv("DISCORD_TOKEN")
-bot.run(TOKEN)
+    overwrite.connect = True
+    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+    await interaction.response.send_message(f"🔓 Unlocked the voice channel **{channel.name}**!")
+
+# Run the bot with token from environment variable
+bot.run(os.getenv("DISCORD_TOKEN"))
