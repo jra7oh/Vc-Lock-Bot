@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 import os
 from flask import Flask
@@ -23,30 +24,30 @@ intents.voice_states = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
+tree = bot.tree
 
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
+    try:
+        synced = await tree.sync()
+        print(f"Synced {len(synced)} commands")
+    except Exception as e:
+        print(e)
 
-@bot.command()
+@tree.command(name="lockvc", description="Lock a voice channel")
+@app_commands.describe(channel="Select the voice channel to lock")
 @commands.has_permissions(manage_channels=True)
-async def lockvc(ctx):
-    if ctx.author.voice:
-        vc = ctx.author.voice.channel
-        await vc.set_permissions(ctx.guild.default_role, connect=False)
-        await ctx.send(f"🔒 Locked **{vc.name}**")
-    else:
-        await ctx.send("⚠️ You're not in a voice channel.")
+async def lockvc(interaction: discord.Interaction, channel: discord.VoiceChannel):
+    await channel.set_permissions(interaction.guild.default_role, connect=False)
+    await interaction.response.send_message(f"🔒 Locked **{channel.name}**", ephemeral=True)
 
-@bot.command()
+@tree.command(name="unlockvc", description="Unlock a voice channel")
+@app_commands.describe(channel="Select the voice channel to unlock")
 @commands.has_permissions(manage_channels=True)
-async def unlockvc(ctx):
-    if ctx.author.voice:
-        vc = ctx.author.voice.channel
-        await vc.set_permissions(ctx.guild.default_role, connect=True)
-        await ctx.send(f"🔓 Unlocked **{vc.name}**")
-    else:
-        await ctx.send("⚠️ You're not in a voice channel.")
+async def unlockvc(interaction: discord.Interaction, channel: discord.VoiceChannel):
+    await channel.set_permissions(interaction.guild.default_role, overwrite=None)
+    await interaction.response.send_message(f"🔓 Unlocked **{channel.name}**", ephemeral=True)
 
 keep_alive()
 TOKEN = os.getenv("DISCORD_TOKEN")
