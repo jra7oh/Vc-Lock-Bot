@@ -74,13 +74,16 @@ async def unlockvc(interaction: discord.Interaction):
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    print("------")
-    # Sync commands to your guild (only do this once)
-    try:
-        await tree.sync(guild=discord.Object(id=GUILD_ID))
-        print("Slash commands synced.")
-    except Exception as e:
-        print(f"Error syncing commands: {e}")
+
+    guild = discord.Object(id=GUILD_ID)
+
+    # Clear all existing commands for the guild to avoid duplicates
+    await tree.clear_commands(guild=guild)
+    print("Cleared all commands from guild.")
+
+    # Sync fresh commands
+    await tree.sync(guild=guild)
+    print("Synced fresh commands.")
 
 # ----- Main entry point -----
 if __name__ == "__main__":
