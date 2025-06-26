@@ -82,7 +82,7 @@ async def on_ready():
 
     guild = discord.Object(id=GUILD_ID)
 
-    tree.clear_commands(guild=guild)  # Removed await here because it's not async
+    await tree.clear_commands(guild=guild)  # <-- this needs await!
     print("Cleared all commands from guild.")
 
     await tree.sync(guild=guild)
