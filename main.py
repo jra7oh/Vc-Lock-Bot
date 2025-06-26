@@ -22,12 +22,11 @@ def keep_alive():
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
-intents.voice_states = True  # needed for voice channel info
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-GUILD_ID = 1386044830290804938  # Your server ID as int
+GUILD_ID = 1386044830290804938  # Your server ID as an integer
 
 @tree.command(name="lockvc", description="Lock the current voice channel", guild=discord.Object(id=GUILD_ID))
 async def lockvc(interaction: discord.Interaction):
@@ -81,25 +80,13 @@ async def unlockvc(interaction: discord.Interaction):
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
-    guild = bot.get_guild(GUILD_ID)
-    if guild is None:
-        try:
-            guild = await bot.fetch_guild(GUILD_ID)
-        except Exception as e:
-            print(f"Failed to fetch guild: {e}")
-            guild = None
+    guild = discord.Object(id=GUILD_ID)
 
-    if guild is not None:
-        try:
-            await tree.clear_commands(guild=guild)
-            print("Cleared all commands from guild.")
+    await tree.clear_commands(guild=guild)  # Clears old commands (optional)
+    print("Cleared all commands from guild.")
 
-            await tree.sync(guild=guild)
-            print("Synced fresh commands.")
-        except Exception as e:
-            print(f"Error syncing commands: {e}")
-    else:
-        print("Guild not found, skipping command sync.")
+    await tree.sync(guild=guild)  # Registers slash commands in the guild
+    print("Synced fresh commands.")
 
 if __name__ == "__main__":
     TOKEN = os.getenv("DISCORD_TOKEN")
@@ -107,5 +94,5 @@ if __name__ == "__main__":
         print("ERROR: DISCORD_TOKEN environment variable not set.")
         exit(1)
 
-    keep_alive()
+    keep_alive()  # Keep the webserver running for uptime
     bot.run(TOKEN)
