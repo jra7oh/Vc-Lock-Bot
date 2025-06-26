@@ -26,7 +26,7 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-GUILD_ID = 1386044830290804938  # Your server ID as an integer
+GUILD_ID = 1386044830290804938  # Your server ID as int
 
 @tree.command(name="lockvc", description="Lock the current voice channel", guild=discord.Object(id=GUILD_ID))
 async def lockvc(interaction: discord.Interaction):
@@ -82,10 +82,10 @@ async def on_ready():
 
     guild = discord.Object(id=GUILD_ID)
 
-    await tree.clear_commands(guild=guild)  # Clears old commands (optional)
+    tree.clear_commands(guild=guild)  # Removed await here because it's not async
     print("Cleared all commands from guild.")
 
-    await tree.sync(guild=guild)  # Registers slash commands in the guild
+    await tree.sync(guild=guild)
     print("Synced fresh commands.")
 
 if __name__ == "__main__":
@@ -94,5 +94,5 @@ if __name__ == "__main__":
         print("ERROR: DISCORD_TOKEN environment variable not set.")
         exit(1)
 
-    keep_alive()  # Keep the webserver running for uptime
+    keep_alive()
     bot.run(TOKEN)
