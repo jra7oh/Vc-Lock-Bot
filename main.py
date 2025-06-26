@@ -81,11 +81,8 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
     guild = discord.Object(id=GUILD_ID)
-    tree.clear_commands(guild=guild)  # Do NOT await this
-    print("Cleared old commands.")
-
-    await tree.sync(guild=guild)
-    print("Synced new commands.")
+    await tree.sync(guild=guild)  # Sync commands with Discord
+    print("Synced commands with guild.")
 
 if __name__ == "__main__":
     keep_alive()
