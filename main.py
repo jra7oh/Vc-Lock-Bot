@@ -5,7 +5,6 @@ from discord import app_commands
 from flask import Flask
 from threading import Thread
 
-# Flask keep-alive
 app = Flask('')
 
 @app.route('/')
@@ -26,7 +25,7 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-GUILD_ID = 1386044830290804938  # Replace with your server ID
+GUILD_ID = 1386044830290804938
 
 @tree.command(name="lockvc", description="Lock the current voice channel", guild=discord.Object(id=GUILD_ID))
 async def lockvc(interaction: discord.Interaction):
@@ -79,10 +78,14 @@ async def unlockvc(interaction: discord.Interaction):
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-
     guild = discord.Object(id=GUILD_ID)
-    await tree.sync(guild=guild)  # Sync commands with Discord
-    print("Synced commands with guild.")
+    try:
+        tree.clear_commands(guild=guild)
+        print("Cleared old commands.")
+        await tree.sync(guild=guild)
+        print("Synced new commands.")
+    except Exception as e:
+        print(f"Sync error: {e}")
 
 if __name__ == "__main__":
     keep_alive()
