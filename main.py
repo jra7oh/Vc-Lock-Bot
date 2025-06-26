@@ -21,13 +21,13 @@ def keep_alive():
 
 # ----- Discord Bot setup -----
 intents = discord.Intents.default()
-intents.message_content = True  # if you need message content
+intents.message_content = True  # If you need message content
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-GUILD_ID = 1386044830290804938  # Your server ID as int
+GUILD_ID = 1386044830290804938  # Replace with your actual server ID
 
 # ----- Commands -----
 @tree.command(name="lockvc", description="Lock the current voice channel", guild=discord.Object(id=GUILD_ID))
@@ -77,11 +77,10 @@ async def on_ready():
 
     guild = discord.Object(id=GUILD_ID)
 
-    # Clear all existing commands for the guild to avoid duplicates
-    await tree.clear_commands(guild=guild)
+    # ✅ FIXED: Remove await
+    tree.clear_commands(guild=guild)
     print("Cleared all commands from guild.")
 
-    # Sync fresh commands
     await tree.sync(guild=guild)
     print("Synced fresh commands.")
 
