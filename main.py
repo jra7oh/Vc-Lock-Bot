@@ -22,6 +22,7 @@ def keep_alive():
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
+intents.voice_states = True  # needed for voice channel info
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
@@ -80,13 +81,25 @@ async def unlockvc(interaction: discord.Interaction):
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
-    guild = discord.Object(id=GUILD_ID)
+    guild = bot.get_guild(GUILD_ID)
+    if guild is None:
+        try:
+            guild = await bot.fetch_guild(GUILD_ID)
+        except Exception as e:
+            print(f"Failed to fetch guild: {e}")
+            guild = None
 
-    await tree.clear_commands(guild=guild)
-    print("Cleared all commands from guild.")
+    if guild is not None:
+        try:
+            await tree.clear_commands(guild=guild)
+            print("Cleared all commands from guild.")
 
-    await tree.sync(guild=guild)
-    print("Synced fresh commands.")
+            await tree.sync(guild=guild)
+            print("Synced fresh commands.")
+        except Exception as e:
+            print(f"Error syncing commands: {e}")
+    else:
+        print("Guild not found, skipping command sync.")
 
 if __name__ == "__main__":
     TOKEN = os.getenv("DISCORD_TOKEN")
